@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مُحلّل المعادلات الذكي</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --soft: #1f2937;
+      --accent: #22c55e;
+      --accent-2: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; font-family: "Cairo", "Tahoma", sans-serif; }
+    body {
+      margin: 0;
+      background: linear-gradient(160deg, #0b1022, #111827 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .app { width: min(1080px, 100%); }
+    h1 { margin: 8px 0 4px; color: #fff; }
+    .subtitle { color: var(--muted); margin-bottom: 18px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+    }
+    .card {
+      background: rgba(17,24,39,.9);
+      border: 1px solid #374151;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    label { display:block; margin-bottom: 8px; font-weight: 700; }
+    select, input, textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #4b5563;
+      background: #0b1220;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 16px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-2); }
+    .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+    .row.two { grid-template-columns: repeat(2, 1fr); }
+    .hidden { display: none; }
+    .actions { display:flex; gap:10px; margin-top: 12px; }
+    .btn {
+      cursor: pointer;
+      background: linear-gradient(130deg, #2563eb, #06b6d4);
+      border: none;
+      font-weight: 700;
+    }
+    .btn.secondary { background: linear-gradient(130deg, #16a34a, #22c55e); }
+    .result {
+      background: #0a1220;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+      line-height: 1.9;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+    .kbd {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .key {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .hint { color: var(--muted); font-size: 14px; margin-top: 8px; }
+    .danger { color: var(--danger); font-weight: 700; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .kbd { grid-template-columns: repeat(4, 1fr);} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>مُحلّل المعادلات الذكي 🤖📐</h1>
+    <p class="subtitle">موقع عربي لحل أنواع مختلفة من مسائل الرياضيات مع شرح الخطوات ولوحة مفاتيح رياضية مدمجة.</p>
+
+    <div class="grid">
+      <section class="card">
+        <label for="mode">نوع المسألة</label>
+        <select id="mode">
+          <option value="eval">حساب تعبير رياضي (مثال: 2*(3+5)^2)</option>
+          <option value="linear">حل معادلة خطية: ax + b = 0</option>
+          <option value="quadratic">حل معادلة تربيعية: ax² + bx + c = 0</option>
+          <option value="system">حل نظام معادلتين خطيتين (2×2)</option>
+        </select>
+
+        <div id="evalBox" class="mode-box">
+          <label for="expression">اكتب التعبير الرياضي</label>
+          <textarea id="expression" placeholder="مثال: (5+3)^2 - sqrt(16)"></textarea>
+        </div>
+
+        <div id="linearBox" class="mode-box hidden">
+          <div class="row">
+            <div><label>قيمة a</label><input id="la" type="number" step="any" value="2" /></div>
+            <div><label>قيمة b</label><input id="lb" type="number" step="any" value="-4" /></div>
+            <div><label>المتغير</label><input id="lvar" value="x" /></div>
+          </div>
+        </div>
+
+        <div id="quadraticBox" class="mode-box hidden">
+          <div class="row">
+            <div><label>قيمة a</label><input id="qa" type="number" step="any" value="1" /></div>
+            <div><label>قيمة b</label><input id="qb" type="number" step="any" value="-3" /></div>
+            <div><label>قيمة c</label><input id="qc" type="number" step="any" value="2" /></div>
+          </div>
+        </div>
+
+        <div id="systemBox" class="mode-box hidden">
+          <p class="hint">الصيغة: a₁x + b₁y = c₁ و a₂x + b₂y = c₂</p>
+          <div class="row">
+            <div><label>a₁</label><input id="a1" type="number" step="any" value="2" /></div>
+            <div><label>b₁</label><input id="b1" type="number" step="any" value="1" /></div>
+            <div><label>c₁</label><input id="c1" type="number" step="any" value="7" /></div>
+          </div>
+          <div class="row">
+            <div><label>a₂</label><input id="a2" type="number" step="any" value="1" /></div>
+            <div><label>b₂</label><input id="b2" type="number" step="any" value="-1" /></div>
+            <div><label>c₂</label><input id="c2" type="number" step="any" value="1" /></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="solveBtn">حل الآن + شرح</button>
+          <button class="btn secondary" id="copyBtn">نسخ الناتج</button>
+        </div>
+
+        <div class="result" id="result">النتيجة والشرح سيظهران هنا...</div>
+      </section>
+
+      <section class="card">
+        <h3>لوحة مفاتيح الرياضيات</h3>
+        <p class="hint">اختر حقل الكتابة أولاً ثم اضغط على الرموز للإدخال السريع.</p>
+        <div class="kbd" id="keyboard"></div>
+        <p class="hint">يدعم الأرقام العربية والإنجليزية والعمليات: + − × ÷ ^ √ () π</p>
+        <p id="copyState" class="hint"></p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const mode = document.getElementById('mode');
+    const boxes = {
+      eval: document.getElementById('evalBox'),
+      linear: document.getElementById('linearBox'),
+      quadratic: document.getElementById('quadraticBox'),
+      system: document.getElementById('systemBox'),
+    };
+    const result = document.getElementById('result');
+    const copyState = document.getElementById('copyState');
+    let activeInput = null;
+
+    document.querySelectorAll('input,textarea').forEach(el => {
+      el.addEventListener('focus', () => activeInput = el);
+    });
+
+    mode.addEventListener('change', () => {
+      Object.values(boxes).forEach(b => b.classList.add('hidden'));
+      boxes[mode.value].classList.remove('hidden');
+    });
+
+    const keys = ['7','8','9','+','-','(',')','4','5','6','*','/','^','π','1','2','3','sqrt(','x','y','0','.','=',',','sin(','cos(','tan(','log(','ln(','abs(','DEL','CLR'];
+    const keyboard = document.getElementById('keyboard');
+
+    keys.forEach(k => {
+      const div = document.createElement('div');
+      div.className = 'key';
+      div.textContent = k;
+      div.onclick = () => handleKey(k);
+      keyboard.appendChild(div);
+    });
+
+    function handleKey(k) {
+      if (!activeInput) return;
+      if (k === 'DEL') {
+        activeInput.value = activeInput.value.slice(0, -1);
+      } else if (k === 'CLR') {
+        activeInput.value = '';
+      } else {
+        activeInput.value += k;
+      }
+      activeInput.focus();
+    }
+
+    function normalizeMath(text) {
+      const arNums = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+      return text
+        .replace(/[٠-٩]/g, d => arNums[d])
+        .replace(/،/g, ',')
+        .replace(/÷/g, '/')
+        .replace(/×/g, '*')
+        .replace(/−/g, '-')
+        .replace(/π/g, 'PI');
+    }
+
+    function safeEval(expression) {
+      const allowed = /^[0-9+\-*/^().,\sA-Za-z_]+$/;
+      if (!allowed.test(expression)) throw new Error('يوجد رموز غير مدعومة في التعبير.');
+      let exp = expression.replace(/\^/g, '**');
+      const f = new Function('PI','sqrt','sin','cos','tan','log','ln','abs', `return (${exp});`);
+      return f(Math.PI, Math.sqrt, Math.sin, Math.cos, Math.tan, Math.log10 || ((x)=>Math.log(x)/Math.LN10), Math.log, Math.abs);
+    }
+
+    function aiTip(mode, value) {
+      if (mode === 'quadratic' && Number.isFinite(value?.disc)) {
+        if (value.disc > 0) return 'تحليل ذكي: بما أن المميز موجب، فالمعادلة لها جذران حقيقيان مختلفان.';
+        if (value.disc === 0) return 'تحليل ذكي: المميز يساوي صفر، إذن يوجد جذر حقيقي مكرر.';
+        return 'تحليل ذكي: المميز سالب، إذن الجذور مركبة (ليست حقيقية).';
+      }
+      return 'تحليل ذكي: راجع القيم المدخلة وتأكد من الوحدات والإشارات للحصول على نتيجة دقيقة.';
+    }
+
+    document.getElementById('solveBtn').onclick = () => {
+      copyState.textContent = '';
+      try {
+        if (mode.value === 'eval') {
+          const raw = document.getElementById('expression').value.trim();
+          const exp = normalizeMath(raw);
+          const val = safeEval(exp);
+          result.textContent = `✅ النتيجة: ${val}\n\nالشرح:\n1) قمنا بتحويل التعبير إلى صيغة حسابية قابلة للتنفيذ.\n2) نفذنا العمليات حسب الأولوية الرياضية.\n3) الناتج النهائي هو ${val}.\n\nتحليل ذكي: إذا كانت النتيجة غير متوقعة، جرّب إضافة أقواس لتحديد أولوية العمليات.`;
+          return;
+        }
+
+        if (mode.value === 'linear') {
+          const a = Number(document.getElementById('la').value);
+          const b = Number(document.getElementById('lb').value);
+          const v = document.getElementById('lvar').value || 'x';
+          if (a === 0) throw new Error('في المعادلة الخطية يجب أن تكون a ≠ 0.');
+          const x = -b / a;
+          result.textContent = `✅ الحل: ${v} = ${x}\n\nالشرح:\n1) المعادلة: ${a}${v} + (${b}) = 0\n2) ننقل الحد الثابت: ${a}${v} = ${-b}\n3) نقسم على ${a}: ${v} = ${-b}/${a} = ${x}\n\n${aiTip('linear')}`;
+          return;
+        }
+
+        if (mode.value === 'quadratic') {
+          const a = Number(document.getElementById('qa').value);
+          const b = Number(document.getElementById('qb').value);
+          const c = Number(document.getElementById('qc').value);
+          if (a === 0) throw new Error('في المعادلة التربيعية يجب أن تكون a ≠ 0.');
+          const disc = b*b - 4*a*c;
+          const explanation = [`المعادلة: ${a}x² + (${b})x + (${c}) = 0`,`المميز Δ = b² - 4ac = ${disc}`];
+          let sol;
+          if (disc >= 0) {
+            const x1 = (-b + Math.sqrt(disc)) / (2*a);
+            const x2 = (-b - Math.sqrt(disc)) / (2*a);
+            sol = `x₁ = ${x1} ، x₂ = ${x2}`;
+            explanation.push(`x = (-b ± √Δ) / 2a => x₁=${x1}, x₂=${x2}`);
+          } else {
+            const real = (-b / (2*a)).toFixed(4);
+            const imag = (Math.sqrt(-disc) / (2*a)).toFixed(4);
+            sol = `x₁ = ${real} + ${imag}i ، x₂ = ${real} - ${imag}i`;
+            explanation.push('Δ < 0 => الجذور مركبة.');
+          }
+          result.textContent = `✅ الحل: ${sol}\n\nالشرح:\n${explanation.map((e,i)=>`${i+1}) ${e}`).join('\n')}\n\n${aiTip('quadratic', {disc})}`;
+          return;
+        }
+
+        if (mode.value === 'system') {
+          const a1 = Number(document.getElementById('a1').value);
+          const b1 = Number(document.getElementById('b1').value);
+          const c1 = Number(document.getElementById('c1').value);
+          const a2 = Number(document.getElementById('a2').value);
+          const b2 = Number(document.getElementById('b2').value);
+          const c2 = Number(document.getElementById('c2').value);
+          const det = a1*b2 - a2*b1;
+          if (det === 0) throw new Error('لا يوجد حل وحيد لأن المحدد = 0.');
+          const x = (c1*b2 - c2*b1)/det;
+          const y = (a1*c2 - a2*c1)/det;
+          result.textContent = `✅ الحل: x = ${x} ، y = ${y}\n\nالشرح (قاعدة كرامر):\n1) D = a₁b₂ - a₂b₁ = ${det}\n2) Dx = c₁b₂ - c₂b₁ = ${c1*b2 - c2*b1}\n3) Dy = a₁c₂ - a₂c₁ = ${a1*c2 - a2*c1}\n4) x = Dx/D = ${x}\n5) y = Dy/D = ${y}\n\nتحليل ذكي: النظام له حل وحيد لأن D ≠ 0.`;
+        }
+      } catch (err) {
+        result.innerHTML = `<span class="danger">❌ خطأ: ${err.message}</span>`;
+      }
+    };
+
+    document.getElementById('copyBtn').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(result.innerText);
+        copyState.textContent = '✅ تم نسخ الناتج بنجاح.';
+      } catch {
+        copyState.textContent = '⚠️ تعذر النسخ التلقائي. انسخ يدويًا.';
+      }
+    };
+  </script>
+</body>
+</html>
